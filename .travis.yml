@@ -1,0 +1,20 @@
+language: go
+
+go:
+  - 1.4
+  - 1.5
+  - 1.6
+
+install:
+  - go get golang.org/x/tools/cmd/vet
+  - go get github.com/mattn/goveralls
+  - go get golang.org/x/tools/cmd/cover
+  - go get github.com/golang/lint/golint
+  - go get github.com/pierrre/gotestcover
+  - go get -t ./...
+
+script:
+  - go vet -x ./xerror
+  - golint ./xerror
+  - gotestcover -coverprofile="cover.out" -race -covermode="count" ./xerror
+  - goveralls -coverprofile="cover.out"
