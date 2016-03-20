@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/ibrt/go-xerror/xerror"
 	"github.com/stretchr/testify/assert"
+	"regexp"
 	"testing"
 )
 
@@ -29,11 +30,26 @@ func TestIs(t *testing.T) {
 	assert.False(t, err.Is("m1"))
 }
 
+func TestIsPattern(t *testing.T) {
+	err := xerror.New("m2", "m1")
+	assert.True(t, err.IsPattern(regexp.MustCompile("^m")))
+	assert.True(t, err.IsPattern(regexp.MustCompile("^m2")))
+	assert.False(t, err.IsPattern(regexp.MustCompile("^m1")))
+}
+
 func TestContains(t *testing.T) {
 	err := xerror.New("m2", "m1")
 	assert.True(t, err.Contains("m2"))
 	assert.True(t, err.Contains("m1"))
 	assert.False(t, err.Contains("m3"))
+}
+
+func TestContainsPattern(t *testing.T) {
+	err := xerror.New("m2", "m1")
+	assert.True(t, err.ContainsPattern(regexp.MustCompile("^m")))
+	assert.True(t, err.ContainsPattern(regexp.MustCompile("^m2")))
+	assert.True(t, err.ContainsPattern(regexp.MustCompile("^m1")))
+	assert.False(t, err.ContainsPattern(regexp.MustCompile("^m3")))
 }
 
 func TestCopy(t *testing.T) {

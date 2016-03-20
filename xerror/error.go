@@ -1,6 +1,9 @@
 package xerror
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 // Error represents an augmented error.
 type Error struct {
@@ -25,13 +28,28 @@ func Wrap(err error) *Error {
 
 // Is returns true if the outermost error message equals the given message, false otherwise.
 func (e *Error) Is(message string) bool {
-	return len(e.messages) > 0 && e.messages[0] == message
+	return e.messages[0] == message
+}
+
+// IsPattern returns true if the outermost error message matches the given pattern, false otherwise.
+func (e *Error) IsPattern(pattern *regexp.Regexp) bool {
+	return pattern.MatchString(e.messages[0])
 }
 
 // Contains returns true if the error contains the given message, false otherwise.
 func (e *Error) Contains(message string) bool {
 	for _, m := range e.messages {
 		if m == message {
+			return true
+		}
+	}
+	return false
+}
+
+// ContainsPattern returns true if the error contains a message that matches the given pattern, false otherwise.
+func (e *Error) ContainsPattern(pattern *regexp.Regexp) bool {
+	for _, m := range e.messages {
+		if pattern.MatchString(m) {
 			return true
 		}
 	}
