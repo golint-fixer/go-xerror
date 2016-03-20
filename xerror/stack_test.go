@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	frameRegexp = regexp.MustCompile("^([^:]+):([0-9]+) \\(([^\\)]+)\\)")
+	frameRegexp = regexp.MustCompile("^([^:]+):([0-9]+) \\(([^\\)]+)\\)$")
 )
 
 func TestNewStack(t *testing.T) {
