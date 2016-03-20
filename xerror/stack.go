@@ -10,14 +10,14 @@ const (
 )
 
 func newStack() []string {
-	stack := make([]uintptr, maxStackLen)
-	stack = stack[:runtime.Callers(2, stack)]
-	stackTrace := make([]string, len(stack))
+	pcs := make([]uintptr, maxStackLen)
+	pcs = pcs[:runtime.Callers(2, pcs)]
+	stack := make([]string, len(pcs))
 
-	for i := 0; i < len(stack); i++ {
-		file, line := runtime.FuncForPC(stack[i]).FileLine(stack[i] - 1)
-		stackTrace[i] = fmt.Sprintf("%s:%d (0x%x)", file, line, stack[i])
+	for i := 0; i < len(pcs); i++ {
+		file, line := runtime.FuncForPC(pcs[i]).FileLine(pcs[i] - 1)
+		stack[i] = fmt.Sprintf("%s:%d (0x%x)", file, line, pcs[i])
 	}
 
-	return stackTrace
+	return stack
 }
