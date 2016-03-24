@@ -110,3 +110,39 @@ func (e *Error) WithDebug(debug ...interface{}) *Error {
 	n.debug = append(debug, n.debug...)
 	return n
 }
+
+// Is returns true if the outermost error message (if err is *Error) or the error string (if err is a standard Go error) equals the given message.
+func Is(err error, message string) bool {
+	if xerr, ok := err.(*Error); ok {
+		return xerr.Is(message)
+	} else {
+		return err.Error() == message
+	}
+}
+
+// IsPattern is like Is but uses regexp matching rather than string comparison.
+func IsPattern(err error, pattern *regexp.Regexp) bool {
+	if xerr, ok := err.(*Error); ok {
+		return xerr.IsPattern(pattern)
+	} else {
+		return pattern.MatchString(err.Error())
+	}
+}
+
+// Contains is like Is, but in case err is of type *Error compares the message with all attached messages.
+func Contains(err error, message string) bool {
+	if xerr, ok := err.(*Error); ok {
+		return xerr.Contains(message)
+	} else {
+		return err.Error() == message
+	}
+}
+
+// ContainsPattern is like Contains but uses regexp matching rather than string comparison.
+func ContainsPattern(err error, pattern *regexp.Regexp) bool {
+	if xerr, ok := err.(*Error); ok {
+		return xerr.ContainsPattern(pattern)
+	} else {
+		return pattern.MatchString(err.Error())
+	}
+}
