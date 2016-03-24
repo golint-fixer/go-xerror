@@ -35,7 +35,6 @@ func TestIs(t *testing.T) {
 	assert.False(t, xerror.Is(err, "m1"))
 	assert.True(t, xerror.Is(errors.New("m2"), "m2"))
 	assert.False(t, xerror.Is(errors.New("m2"), "m1"))
-
 }
 
 func TestIsPattern(t *testing.T) {
