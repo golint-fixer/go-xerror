@@ -25,6 +25,7 @@ func TestWrap(t *testing.T) {
 	assert.True(t, len(err.Stack()) > 0)
 	xerr := xerror.Wrap(err)
 	assert.Equal(t, err, xerr)
+	assert.Nil(t, xerror.Wrap(nil))
 }
 
 func TestIs(t *testing.T) {

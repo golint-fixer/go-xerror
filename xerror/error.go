@@ -31,6 +31,9 @@ func New(messages ...string) *Error {
 
 // Wrap creates an augmented error given a standard Go error or just returns the given *Error.
 func Wrap(err error) *Error {
+	if err == nil {
+		return nil
+	}
 	if xerr, ok := err.(*Error); ok {
 		return xerr
 	}
