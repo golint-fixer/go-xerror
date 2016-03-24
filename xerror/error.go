@@ -133,34 +133,30 @@ func (e *xerror) WithDebug(debug ...interface{}) Error {
 func Is(err error, message string) bool {
 	if xerr, ok := err.(*xerror); ok {
 		return xerr.Is(message)
-	} else {
-		return err.Error() == message
 	}
+	return err.Error() == message
 }
 
 // IsPattern is like Is but uses regexp matching rather than string comparison.
 func IsPattern(err error, pattern *regexp.Regexp) bool {
 	if xerr, ok := err.(*xerror); ok {
 		return xerr.IsPattern(pattern)
-	} else {
-		return pattern.MatchString(err.Error())
 	}
+	return pattern.MatchString(err.Error())
 }
 
 // Contains is like Is, but in case err is of type *Error compares the message with all attached messages.
 func Contains(err error, message string) bool {
 	if xerr, ok := err.(*xerror); ok {
 		return xerr.Contains(message)
-	} else {
-		return err.Error() == message
 	}
+	return err.Error() == message
 }
 
 // ContainsPattern is like Contains but uses regexp matching rather than string comparison.
 func ContainsPattern(err error, pattern *regexp.Regexp) bool {
 	if xerr, ok := err.(*xerror); ok {
 		return xerr.ContainsPattern(pattern)
-	} else {
-		return pattern.MatchString(err.Error())
 	}
+	return pattern.MatchString(err.Error())
 }
