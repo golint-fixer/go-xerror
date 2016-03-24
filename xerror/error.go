@@ -14,15 +14,30 @@ import (
 )
 
 // Error represents an augmented error.
-type Error struct {
+type Error interface {
+	error
+	Is(string) bool
+	IsPattern(*regexp.Regexp) bool
+	Contains(string) bool
+	ContainsPattern(*regexp.Regexp) bool
+	Messages() []string
+	Debug() []interface{}
+	Stack() []string
+	Copy() Error
+	WithMessages(...string) Error
+	WithDebug(...interface{}) Error
+}
+
+// xerror implements Error
+type xerror struct {
 	messages []string
 	debug    []interface{}
 	stack    []string
 }
 
 // New creates an augmented error given a list of messages.
-func New(messages ...string) *Error {
-	return &Error{
+func New(messages ...string) Error {
+	return &xerror{
 		messages: messages,
 		debug:    make([]interface{}, 0),
 		stack:    newStack(),
@@ -30,28 +45,28 @@ func New(messages ...string) *Error {
 }
 
 // Wrap creates an augmented error given a standard Go error or just returns the given *Error.
-func Wrap(err error) *Error {
+func Wrap(err error) Error {
 	if err == nil {
 		return nil
 	}
-	if xerr, ok := err.(*Error); ok {
+	if xerr, ok := err.(*xerror); ok {
 		return xerr
 	}
 	return New(err.Error())
 }
 
 // Is returns true if the outermost error message equals the given message, false otherwise.
-func (e *Error) Is(message string) bool {
+func (e *xerror) Is(message string) bool {
 	return e.messages[0] == message
 }
 
 // IsPattern returns true if the outermost error message matches the given pattern, false otherwise.
-func (e *Error) IsPattern(pattern *regexp.Regexp) bool {
+func (e *xerror) IsPattern(pattern *regexp.Regexp) bool {
 	return pattern.MatchString(e.messages[0])
 }
 
 // Contains returns true if the error contains the given message, false otherwise.
-func (e *Error) Contains(message string) bool {
+func (e *xerror) Contains(message string) bool {
 	for _, m := range e.messages {
 		if m == message {
 			return true
@@ -61,7 +76,7 @@ func (e *Error) Contains(message string) bool {
 }
 
 // ContainsPattern returns true if the error contains a message that matches the given pattern, false otherwise.
-func (e *Error) ContainsPattern(pattern *regexp.Regexp) bool {
+func (e *xerror) ContainsPattern(pattern *regexp.Regexp) bool {
 	for _, m := range e.messages {
 		if pattern.MatchString(m) {
 			return true
@@ -72,28 +87,28 @@ func (e *Error) ContainsPattern(pattern *regexp.Regexp) bool {
 
 // Error implements the standard error interface.
 // The result is built by joining the messages with the ": " separator.
-func (e *Error) Error() string {
+func (e *xerror) Error() string {
 	return strings.Join(e.messages, ": ")
 }
 
 // Messages returns the slice of error messages.
-func (e *Error) Messages() []string {
+func (e *xerror) Messages() []string {
 	return e.messages
 }
 
 // Debug returns the slice of debug objects.
-func (e *Error) Debug() []interface{} {
+func (e *xerror) Debug() []interface{} {
 	return e.debug
 }
 
 // Stack returns the innermost error stack trace.
-func (e *Error) Stack() []string {
+func (e *xerror) Stack() []string {
 	return e.stack
 }
 
 // Copy returns a copy of the error.
-func (e *Error) Copy() *Error {
-	return &Error{
+func (e *xerror) Copy() Error {
+	return &xerror{
 		messages: append(make([]string, 0, len(e.messages)), e.messages...),
 		debug:    append(make([]interface{}, 0, len(e.debug)), e.debug...),
 		stack:    append(make([]string, 0, len(e.stack)), e.stack...),
@@ -101,22 +116,22 @@ func (e *Error) Copy() *Error {
 }
 
 // WithMessages returns a copy of the Error with the given messages prepended to the messages slice.
-func (e *Error) WithMessages(message ...string) *Error {
-	n := e.Copy()
+func (e *xerror) WithMessages(message ...string) Error {
+	n := e.Copy().(*xerror)
 	n.messages = append(message, n.messages...)
 	return n
 }
 
 // WithDebug returns a copy of the Error with the given debug objects prepended to the debug objects slice.
-func (e *Error) WithDebug(debug ...interface{}) *Error {
-	n := e.Copy()
+func (e *xerror) WithDebug(debug ...interface{}) Error {
+	n := e.Copy().(*xerror)
 	n.debug = append(debug, n.debug...)
 	return n
 }
 
 // Is returns true if the outermost error message (if err is *Error) or the error string (if err is a standard Go error) equals the given message.
 func Is(err error, message string) bool {
-	if xerr, ok := err.(*Error); ok {
+	if xerr, ok := err.(*xerror); ok {
 		return xerr.Is(message)
 	} else {
 		return err.Error() == message
@@ -125,7 +140,7 @@ func Is(err error, message string) bool {
 
 // IsPattern is like Is but uses regexp matching rather than string comparison.
 func IsPattern(err error, pattern *regexp.Regexp) bool {
-	if xerr, ok := err.(*Error); ok {
+	if xerr, ok := err.(*xerror); ok {
 		return xerr.IsPattern(pattern)
 	} else {
 		return pattern.MatchString(err.Error())
@@ -134,7 +149,7 @@ func IsPattern(err error, pattern *regexp.Regexp) bool {
 
 // Contains is like Is, but in case err is of type *Error compares the message with all attached messages.
 func Contains(err error, message string) bool {
-	if xerr, ok := err.(*Error); ok {
+	if xerr, ok := err.(*xerror); ok {
 		return xerr.Contains(message)
 	} else {
 		return err.Error() == message
@@ -143,7 +158,7 @@ func Contains(err error, message string) bool {
 
 // ContainsPattern is like Contains but uses regexp matching rather than string comparison.
 func ContainsPattern(err error, pattern *regexp.Regexp) bool {
-	if xerr, ok := err.(*Error); ok {
+	if xerr, ok := err.(*xerror); ok {
 		return xerr.ContainsPattern(pattern)
 	} else {
 		return pattern.MatchString(err.Error())
