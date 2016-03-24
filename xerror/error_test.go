@@ -22,6 +22,8 @@ func TestWrap(t *testing.T) {
 	assert.Equal(t, []string{"e1"}, err.Messages())
 	assert.Equal(t, []interface{}{}, err.Debug())
 	assert.True(t, len(err.Stack()) > 0)
+	xerr := xerror.Wrap(err)
+	assert.Equal(t, err, xerr)
 }
 
 func TestIs(t *testing.T) {

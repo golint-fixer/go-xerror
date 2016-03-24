@@ -29,8 +29,11 @@ func New(messages ...string) *Error {
 	}
 }
 
-// Wrap creates an augmented error given a standard Go error.
+// Wrap creates an augmented error given a standard Go error or just returns the given *Error.
 func Wrap(err error) *Error {
+	if xerr, ok := err.(*Error); ok {
+		return xerr
+	}
 	return New(err.Error())
 }
 
