@@ -9,6 +9,7 @@ Package xerror extends the functionality of Go's built-in error interface in few
 package xerror
 
 import (
+	"encoding/json"
 	"regexp"
 	"strings"
 )
@@ -16,6 +17,8 @@ import (
 // Error represents an augmented error.
 type Error interface {
 	error
+	json.Marshaler
+
 	Is(string) bool
 	IsPattern(*regexp.Regexp) bool
 	Contains(string) bool
@@ -33,6 +36,13 @@ type xerror struct {
 	messages []string
 	debug    []interface{}
 	stack    []string
+}
+
+// xerrorJSON is used to produce the JSON representation of an Error
+type xerrorJSON struct {
+	Messages []string      `json:"messages"`
+	Debug    []interface{} `json:"debug,omitempty"`
+	Stack    []string      `json:"stack"`
 }
 
 // New creates an augmented error given a list of messages.
@@ -89,6 +99,15 @@ func (e *xerror) ContainsPattern(pattern *regexp.Regexp) bool {
 // The result is built by joining the messages with the ": " separator.
 func (e *xerror) Error() string {
 	return strings.Join(e.messages, ": ")
+}
+
+// MarshalJSON implements the JSON Marshaler interface.
+func (e *xerror) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&xerrorJSON{
+		Messages: e.messages,
+		Debug:    e.debug,
+		Stack:    e.stack,
+	})
 }
 
 // Messages returns the slice of error messages.

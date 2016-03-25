@@ -1,6 +1,7 @@
 package xerror_test
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ibrt/go-xerror/xerror"
@@ -119,4 +120,10 @@ func TestImplementsError(t *testing.T) {
 	assert.Equal(t, "m1", err.Error())
 	err = xerror.Wrap(nil)
 	assert.True(t, err == nil)
+}
+
+func TestMarshalJSON(t *testing.T) {
+	xerr := xerror.New("m2", "m1").WithDebug("d2", "d1")
+	_, err := json.Marshal(xerr)
+	assert.Nil(t, err)
 }
