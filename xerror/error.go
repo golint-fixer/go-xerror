@@ -65,6 +65,21 @@ func Wrap(err error) Error {
 	return New(err.Error())
 }
 
+// Error implements the standard error interface.
+// The result is built by joining the messages with the ": " separator.
+func (e *xerror) Error() string {
+	return strings.Join(e.messages, ": ")
+}
+
+// MarshalJSON implements the JSON Marshaler interface.
+func (e *xerror) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&xerrorJSON{
+		Messages: e.messages,
+		Debug:    e.debug,
+		Stack:    e.stack,
+	})
+}
+
 // Is returns true if the outermost error message equals the given message, false otherwise.
 func (e *xerror) Is(message string) bool {
 	return e.messages[0] == message
@@ -93,21 +108,6 @@ func (e *xerror) ContainsPattern(pattern *regexp.Regexp) bool {
 		}
 	}
 	return false
-}
-
-// Error implements the standard error interface.
-// The result is built by joining the messages with the ": " separator.
-func (e *xerror) Error() string {
-	return strings.Join(e.messages, ": ")
-}
-
-// MarshalJSON implements the JSON Marshaler interface.
-func (e *xerror) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&xerrorJSON{
-		Messages: e.messages,
-		Debug:    e.debug,
-		Stack:    e.stack,
-	})
 }
 
 // Messages returns the slice of error messages.
