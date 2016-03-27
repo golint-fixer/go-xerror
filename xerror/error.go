@@ -1,10 +1,7 @@
 /*
-Package xerror extends the functionality of Go's built-in error interface in few ways:
+Package xerror extends the functionality of Go's built-in error interface.
 
-1) A list of error messages, for easy wrapping and error type detection
-2) Ability to attach arbitrary debug values to the error
-3) Error stack trace propagation
-4) Immutable errors that can easily be copied and modified with a fluent API
+
 */
 package xerror
 

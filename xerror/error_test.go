@@ -118,6 +118,8 @@ func TestImplementsError(t *testing.T) {
 	var err error
 	err = xerror.New("m1")
 	assert.Equal(t, "m1", err.Error())
+	_, ok := err.(xerror.Error)
+	assert.True(t, ok)
 	err = xerror.Wrap(nil)
 	assert.True(t, err == nil)
 }
