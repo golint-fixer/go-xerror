@@ -1,5 +1,5 @@
 /*
-Package xerror extends the functionality of Go's built-in error interface, in few ways:
+Package xerror extends the functionality of Go's built-in error interface, in several ways:
 
 	- errors carry a stack trace of the location where they were first created
 	- it is possible to attach debug objects to errors for later reporting
@@ -26,7 +26,7 @@ Errors are immutable, but modified copies of them can be obtained using WithMess
 
 	return xerror.Wrap(err).WithMessages("unable to perform action").WithDebug(ctx, req)
 
-Error also provides few methods for determining its type, by matching all messages or just the outermost one:
+Error also provides methods for determining its type, by matching all messages or just the outermost one:
 
 	err := xerror.New("m2", "m1")
 	err.Is("m2") // true
