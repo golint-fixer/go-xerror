@@ -30,6 +30,19 @@ func TestWrap(t *testing.T) {
 	assert.Nil(t, xerror.Wrap(nil))
 }
 
+func TestWrapWith(t *testing.T) {
+	err := xerror.WrapWith(fmt.Errorf("e1"), "e2", "d2", "d1")
+	assert.Equal(t, "e2: e1", err.Error())
+	assert.Equal(t, []string{"e2", "e1"}, err.Messages())
+	assert.Equal(t, []interface{}{"d2", "d1"}, err.Debug())
+	assert.True(t, len(err.Stack()) > 0)
+	xerr := xerror.WrapWith(xerror.New("e1").WithDebug("d1"), "e2", "d2")
+	assert.Equal(t, "e2: e1", xerr.Error())
+	assert.Equal(t, []string{"e2", "e1"}, xerr.Messages())
+	assert.Equal(t, []interface{}{"d2", "d1"}, xerr.Debug())
+	assert.True(t, len(err.Stack()) > 0)
+}
+
 func TestIs(t *testing.T) {
 	err := xerror.New("m2", "m1")
 	assert.True(t, err.Is("m2"))

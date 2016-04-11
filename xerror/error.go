@@ -97,6 +97,19 @@ func Wrap(err error) Error {
 	return New(err.Error())
 }
 
+// WrapWith is equivalent to a Wrap call followed by WithMessages and WithDebug, but err must not be nil.
+func WrapWith(err error, message string, debug ...interface{}) Error {
+	var n *xerror
+	if xerr, ok := err.(*xerror); ok {
+		n = xerr.Copy().(*xerror)
+	} else {
+		n = New(err.Error()).(*xerror)
+	}
+	n.messages = append([]string{message}, n.messages...)
+	n.debug = append(debug, n.debug...)
+	return n
+}
+
 // Error implements the standard error interface.
 // The result is built by joining the messages with the ": " separator.
 func (e *xerror) Error() string {
