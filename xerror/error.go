@@ -106,7 +106,9 @@ func WrapWith(err error, message string, debug ...interface{}) Error {
 		n = New(err.Error()).(*xerror)
 	}
 	n.messages = append([]string{message}, n.messages...)
-	n.debug = append(debug, n.debug...)
+	if len(debug) > 0 {
+		n.debug = append(debug, n.debug...)
+	}
 	return n
 }
 

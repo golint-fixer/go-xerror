@@ -41,6 +41,21 @@ func TestWrapWith(t *testing.T) {
 	assert.Equal(t, []string{"e2", "e1"}, xerr.Messages())
 	assert.Equal(t, []interface{}{"d2", "d1"}, xerr.Debug())
 	assert.True(t, len(err.Stack()) > 0)
+	xerr = xerror.WrapWith(xerror.New("e1"), "e2", "d2", "d1")
+	assert.Equal(t, "e2: e1", xerr.Error())
+	assert.Equal(t, []string{"e2", "e1"}, xerr.Messages())
+	assert.Equal(t, []interface{}{"d2", "d1"}, xerr.Debug())
+	assert.True(t, len(err.Stack()) > 0)
+	xerr = xerror.WrapWith(xerror.New("e1").WithDebug("d2", "d1"), "e2")
+	assert.Equal(t, "e2: e1", xerr.Error())
+	assert.Equal(t, []string{"e2", "e1"}, xerr.Messages())
+	assert.Equal(t, []interface{}{"d2", "d1"}, xerr.Debug())
+	assert.True(t, len(err.Stack()) > 0)
+	xerr = xerror.WrapWith(xerror.New("e1"), "e2")
+	assert.Equal(t, "e2: e1", xerr.Error())
+	assert.Equal(t, []string{"e2", "e1"}, xerr.Messages())
+	assert.Equal(t, []interface{}{}, xerr.Debug())
+	assert.True(t, len(err.Stack()) > 0)
 }
 
 func TestIs(t *testing.T) {
