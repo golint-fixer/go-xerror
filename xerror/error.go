@@ -86,6 +86,18 @@ func New(messages ...string) Error {
 	}
 }
 
+// NewWith is equivalent to a New call followed by WithDebug, bug only one message can be provided.
+func NewWith(message string, debug ...interface{}) Error {
+	if debug == nil {
+		debug = make([]interface{}, 0)
+	}
+	return &xerror{
+		messages: []string{message},
+		debug:    debug,
+		stack:    newStack(),
+	}
+}
+
 // Wrap creates an augmented error given a standard Go error or just returns the given *Error.
 func Wrap(err error) Error {
 	if err == nil {

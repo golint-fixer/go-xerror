@@ -16,7 +16,18 @@ func TestNew(t *testing.T) {
 	assert.Equal(t, []string{"m2", "m1"}, err.Messages())
 	assert.Equal(t, []interface{}{}, err.Debug())
 	assert.True(t, len(err.Stack()) > 0)
-	xerror.New()
+}
+
+func TestNewWith(t *testing.T) {
+	err := xerror.NewWith("m1")
+	assert.Equal(t, "m1", err.Error())
+	assert.Equal(t, []string{"m1"}, err.Messages())
+	assert.Equal(t, []interface{}{}, err.Debug())
+	assert.True(t, len(err.Stack()) > 0)
+	err = xerror.NewWith("m1", "d2", "d1")
+	assert.Equal(t, []string{"m1"}, err.Messages())
+	assert.Equal(t, []interface{}{"d2", "d1"}, err.Debug())
+	assert.True(t, len(err.Stack()) > 0)
 }
 
 func TestWrap(t *testing.T) {
