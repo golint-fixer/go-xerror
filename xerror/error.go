@@ -42,11 +42,12 @@ package xerror
 
 import (
 	"encoding/json"
+	"fmt"
 	"regexp"
 	"strings"
 )
 
-// Error represents an augmented error.
+// Error is the augmented error interface provided by this package.
 type Error interface {
 	error
 	json.Marshaler
@@ -55,159 +56,112 @@ type Error interface {
 	IsPattern(*regexp.Regexp) bool
 	Contains(string) bool
 	ContainsPattern(*regexp.Regexp) bool
-	Messages() []string
 	Debug() []interface{}
 	Stack() []string
-	Copy() Error
-	WithMessages(...string) Error
-	WithDebug(...interface{}) Error
+	Clone() Error
 }
 
-// xerror implements Error
+// xerror is the internal implementation of Error
 type xerror struct {
-	messages []string
-	debug    []interface{}
-	stack    []string
+	msg   string
+	fmts  []string
+	dbg   []interface{}
+	stack []string
 }
 
-// xerrorJSON is used to produce the JSON representation of an Error
+// xerrorJSON is used to serialize Error to JSON
 type xerrorJSON struct {
-	Messages []string      `json:"messages"`
-	Debug    []interface{} `json:"debug,omitempty"`
-	Stack    []string      `json:"stack"`
+	Message string        `json:"message"`
+	Debug   []interface{} `json:"debug,omitempty"`
+	Stack   []string      `json:"stack"`
 }
 
-// New creates an augmented error given a list of messages.
-func New(messages ...string) Error {
+// New returns a new augmented error. Parameters that don't have a placeholder in the format string are only stored as debug objects.
+func New(format string, v ...interface{}) Error {
+	v = nilToEmpty(v)
 	return &xerror{
-		messages: messages,
-		debug:    make([]interface{}, 0),
-		stack:    newStack(),
+		msg:   safeSprintf(format, v),
+		fmts:  []string{format},
+		dbg:   v,
+		stack: newStack(),
 	}
 }
 
-// NewWith is equivalent to a New call followed by WithDebug, bug only one message can be provided.
-func NewWith(message string, debug ...interface{}) Error {
-	if debug == nil {
-		debug = make([]interface{}, 0)
-	}
-	return &xerror{
-		messages: []string{message},
-		debug:    debug,
-		stack:    newStack(),
-	}
+// Wrap returns a new augmented error that wraps the given Go `error` or `Error`.
+func Wrap(err error, format string, v ...interface{}) Error {
+	v = nilToEmpty(v)
+	xerr := cloneOrNew(err)
+	xerr.msg = fmt.Sprintf("%v: %v", safeSprintf(format, v), xerr.msg)
+	xerr.fmts = append([]string{format}, xerr.fmts...)
+	xerr.dbg = append(v, xerr.dbg...)
+	return xerr
 }
 
-// Wrap creates an augmented error given a standard Go error or just returns the given *Error.
-func Wrap(err error) Error {
-	if err == nil {
-		return nil
-	}
-	if xerr, ok := err.(*xerror); ok {
-		return xerr
-	}
-	return New(err.Error())
-}
-
-// WrapWith is equivalent to a Wrap call followed by WithMessages and WithDebug, but err must not be nil.
-func WrapWith(err error, message string, debug ...interface{}) Error {
-	var n *xerror
-	if xerr, ok := err.(*xerror); ok {
-		n = xerr.Copy().(*xerror)
-	} else {
-		n = New(err.Error()).(*xerror)
-	}
-	n.messages = append([]string{message}, n.messages...)
-	if len(debug) > 0 {
-		n.debug = append(debug, n.debug...)
-	}
-	return n
-}
-
-// Error implements the standard error interface.
-// The result is built by joining the messages with the ": " separator.
+// Error implements the `error` interface.
 func (e *xerror) Error() string {
-	return strings.Join(e.messages, ": ")
+	return e.msg
 }
 
-// MarshalJSON implements the JSON Marshaler interface.
+// MarshalJSON implements the `json.Marshaler` interface.
 func (e *xerror) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&xerrorJSON{
-		Messages: e.messages,
-		Debug:    e.debug,
-		Stack:    e.stack,
+		Message: e.msg,
+		Debug:   e.dbg,
+		Stack:   e.stack,
 	})
 }
 
-// Is returns true if the outermost error message equals the given message, false otherwise.
-func (e *xerror) Is(message string) bool {
-	return e.messages[0] == message
+// Is returns true if the outermost error message format equals the given message format, false otherwise.
+func (e *xerror) Is(fmt string) bool {
+	return e.fmts[0] == fmt
 }
 
-// IsPattern returns true if the outermost error message matches the given pattern, false otherwise.
+// IsPattern returns true if the outermost error message format matches the given pattern, false otherwise.
 func (e *xerror) IsPattern(pattern *regexp.Regexp) bool {
-	return pattern.MatchString(e.messages[0])
+	return pattern.MatchString(e.fmts[0])
 }
 
-// Contains returns true if the error contains the given message, false otherwise.
-func (e *xerror) Contains(message string) bool {
-	for _, m := range e.messages {
-		if m == message {
+// Contains returns true if the error contains the given message format, false otherwise.
+func (e *xerror) Contains(format string) bool {
+	for _, f := range e.fmts {
+		if f == format {
 			return true
 		}
 	}
 	return false
 }
 
-// ContainsPattern returns true if the error contains a message that matches the given pattern, false otherwise.
+// ContainsPattern returns true if the error contains a message format that matches the given pattern, false otherwise.
 func (e *xerror) ContainsPattern(pattern *regexp.Regexp) bool {
-	for _, m := range e.messages {
-		if pattern.MatchString(m) {
+	for _, f := range e.fmts {
+		if pattern.MatchString(f) {
 			return true
 		}
 	}
 	return false
-}
-
-// Messages returns the slice of error messages.
-func (e *xerror) Messages() []string {
-	return e.messages
 }
 
 // Debug returns the slice of debug objects.
 func (e *xerror) Debug() []interface{} {
-	return e.debug
+	return e.dbg
 }
 
-// Stack returns the innermost error stack trace.
+// Stack returns the stack trace associated with the error.
 func (e *xerror) Stack() []string {
 	return e.stack
 }
 
-// Copy returns a copy of the error.
-func (e *xerror) Copy() Error {
+// Clone returns an exact copy of the `Error`.
+func (e *xerror) Clone() Error {
 	return &xerror{
-		messages: append(make([]string, 0, len(e.messages)), e.messages...),
-		debug:    append(make([]interface{}, 0, len(e.debug)), e.debug...),
-		stack:    append(make([]string, 0, len(e.stack)), e.stack...),
+		msg:   e.msg,
+		fmts:  append(make([]string, 0, len(e.fmts)), e.fmts...),
+		dbg:   append(make([]interface{}, 0, len(e.dbg)), e.dbg...),
+		stack: append(make([]string, 0, len(e.stack)), e.stack...),
 	}
 }
 
-// WithMessages returns a copy of the Error with the given messages prepended to the messages slice.
-func (e *xerror) WithMessages(message ...string) Error {
-	n := e.Copy().(*xerror)
-	n.messages = append(message, n.messages...)
-	return n
-}
-
-// WithDebug returns a copy of the Error with the given debug objects prepended to the debug objects slice.
-func (e *xerror) WithDebug(debug ...interface{}) Error {
-	n := e.Copy().(*xerror)
-	n.debug = append(debug, n.debug...)
-	return n
-}
-
-// Is returns true if the outermost error message (if err is *Error) or the error string (if err is a standard Go error) equals the given message.
+// Is returns true if the outermost message format (if `err` is `Error`) or error string (if `err` is a Go `error`) equals the given message.
 func Is(err error, message string) bool {
 	if xerr, ok := err.(*xerror); ok {
 		return xerr.Is(message)
@@ -223,7 +177,7 @@ func IsPattern(err error, pattern *regexp.Regexp) bool {
 	return pattern.MatchString(err.Error())
 }
 
-// Contains is like Is, but in case err is of type *Error compares the message with all attached messages.
+// Contains is like Is, but in case `err` is of type `Error` compares the message format with all attached message formats.
 func Contains(err error, message string) bool {
 	if xerr, ok := err.(*xerror); ok {
 		return xerr.Contains(message)
@@ -237,4 +191,28 @@ func ContainsPattern(err error, pattern *regexp.Regexp) bool {
 		return xerr.ContainsPattern(pattern)
 	}
 	return pattern.MatchString(err.Error())
+}
+
+// cloneOrNew wraps the given `error` unless it is already of type `*xerror`, in which case it returns a copy
+func cloneOrNew(err error) *xerror {
+	if xerr, ok := err.(*xerror); ok {
+		return xerr.Clone().(*xerror)
+	}
+	return New(err.Error()).(*xerror)
+}
+
+// safeSprintf is like `fmt.Sprintf`, but passes through only at most parameters as placeholders in the format string
+func safeSprintf(format string, v []interface{}) string {
+	if n := strings.Count(format, "%") - strings.Count(format, "%%")*2; len(v) > n {
+		v = v[:n]
+	}
+	return fmt.Sprintf(format, v...)
+}
+
+// nilToEmpty returns the given slice if not nil, or an empty slice if nil
+func nilToEmpty(v []interface{}) []interface{} {
+	if v == nil {
+		return []interface{}{}
+	}
+	return v
 }

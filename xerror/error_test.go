@@ -3,169 +3,174 @@ package xerror_test
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/ibrt/go-xerror/xerror"
 	"github.com/stretchr/testify/assert"
 	"regexp"
 	"testing"
 )
 
-func TestNew(t *testing.T) {
-	err := xerror.New("m2", "m1")
-	assert.Equal(t, "m2: m1", err.Error())
-	assert.Equal(t, []string{"m2", "m1"}, err.Messages())
+func TestNew_NoPlaceholdersAndNoDebug(t *testing.T) {
+	err := xerror.New("fmt")
+	assert.Equal(t, "fmt", err.Error())
 	assert.Equal(t, []interface{}{}, err.Debug())
 	assert.True(t, len(err.Stack()) > 0)
 }
 
-func TestNewWith(t *testing.T) {
-	err := xerror.NewWith("m1")
-	assert.Equal(t, "m1", err.Error())
-	assert.Equal(t, []string{"m1"}, err.Messages())
-	assert.Equal(t, []interface{}{}, err.Debug())
+func TestNew_PlaceholdersAndNoDebug(t *testing.T) {
+	err := xerror.New("fmt %% %v %v", "p2", "p1")
+	assert.Equal(t, "fmt % p2 p1", err.Error())
+	assert.Equal(t, []interface{}{"p2", "p1"}, err.Debug())
 	assert.True(t, len(err.Stack()) > 0)
-	err = xerror.NewWith("m1", "d2", "d1")
-	assert.Equal(t, []string{"m1"}, err.Messages())
+}
+
+func TestNew_NoPlaceholdersAndDebug(t *testing.T) {
+	err := xerror.New("fmt", "d2", "d1")
+	assert.Equal(t, "fmt", err.Error())
 	assert.Equal(t, []interface{}{"d2", "d1"}, err.Debug())
 	assert.True(t, len(err.Stack()) > 0)
 }
 
-func TestWrap(t *testing.T) {
-	err := xerror.Wrap(fmt.Errorf("e1"))
-	assert.Equal(t, "e1", err.Error())
-	assert.Equal(t, []string{"e1"}, err.Messages())
-	assert.Equal(t, []interface{}{}, err.Debug())
+func TestNew_PlaceholdersAndDebug(t *testing.T) {
+	err := xerror.New("fmt %% %v %v", "p2", "p1", "d2", "d1")
+	assert.Equal(t, "fmt % p2 p1", err.Error())
+	assert.Equal(t, []interface{}{"p2", "p1", "d2", "d1"}, err.Debug())
 	assert.True(t, len(err.Stack()) > 0)
-	xerr := xerror.Wrap(err)
-	assert.Equal(t, err, xerr)
-	assert.Nil(t, xerror.Wrap(nil))
 }
 
-func TestWrapWith(t *testing.T) {
-	err := xerror.WrapWith(fmt.Errorf("e1"), "e2", "d2", "d1")
-	assert.Equal(t, "e2: e1", err.Error())
-	assert.Equal(t, []string{"e2", "e1"}, err.Messages())
+func TestNew_NoRequiredPlaceholders(t *testing.T) {
+	err := xerror.New("fmt %v")
+	assert.Equal(t, "fmt %!v(MISSING)", err.Error())
+	assert.Equal(t, []interface{}{}, err.Debug())
+	assert.True(t, len(err.Stack()) > 0)
+}
+
+func TestNew_NotEnoughRequiredPlaceholders(t *testing.T) {
+	err := xerror.New("fmt %v %v", "p1")
+	assert.Equal(t, "fmt p1 %!v(MISSING)", err.Error())
+	assert.Equal(t, []interface{}{"p1"}, err.Debug())
+	assert.True(t, len(err.Stack()) > 0)
+}
+
+func TestWrap_NilErr(t *testing.T) {
+	assert.Panics(t, func() { xerror.Wrap(nil, "fmt") })
+}
+
+func TestWrap_NativeErrNoPlaceholdersAndNoDebug(t *testing.T) {
+	err := xerror.Wrap(errors.New("ew"), "fmt")
+	assert.Equal(t, "fmt: ew", err.Error())
+	assert.Equal(t, []interface{}{}, err.Debug())
+	assert.True(t, len(err.Stack()) > 0)
+}
+
+func TestWrap_NativeErrPlaceholdersAndNoDebug(t *testing.T) {
+	err := xerror.Wrap(errors.New("ew"), "fmt %% %v %v", "p2", "p1")
+	assert.Equal(t, "fmt % p2 p1: ew", err.Error())
+	assert.Equal(t, []interface{}{"p2", "p1"}, err.Debug())
+	assert.True(t, len(err.Stack()) > 0)
+}
+
+func TestWrap_NativeErrNoPlaceholdersAndDebug(t *testing.T) {
+	err := xerror.Wrap(errors.New("ew"), "fmt", "d2", "d1")
+	assert.Equal(t, "fmt: ew", err.Error())
 	assert.Equal(t, []interface{}{"d2", "d1"}, err.Debug())
 	assert.True(t, len(err.Stack()) > 0)
-	xerr := xerror.WrapWith(xerror.New("e1").WithDebug("d1"), "e2", "d2")
-	assert.Equal(t, "e2: e1", xerr.Error())
-	assert.Equal(t, []string{"e2", "e1"}, xerr.Messages())
-	assert.Equal(t, []interface{}{"d2", "d1"}, xerr.Debug())
+}
+
+func TestWrap_NativeErrPlaceholdersAndDebug(t *testing.T) {
+	err := xerror.Wrap(errors.New("ew"), "fmt %% %v %v", "p2", "p1", "d2", "d1")
+	assert.Equal(t, "fmt % p2 p1: ew", err.Error())
+	assert.Equal(t, []interface{}{"p2", "p1", "d2", "d1"}, err.Debug())
 	assert.True(t, len(err.Stack()) > 0)
-	xerr = xerror.WrapWith(xerror.New("e1"), "e2", "d2", "d1")
-	assert.Equal(t, "e2: e1", xerr.Error())
-	assert.Equal(t, []string{"e2", "e1"}, xerr.Messages())
-	assert.Equal(t, []interface{}{"d2", "d1"}, xerr.Debug())
+}
+
+func TestWrap_ErrorNoPlaceholdersAndNoDebug(t *testing.T) {
+	err := xerror.Wrap(xerror.New("fmt %v", "p1", "d1"), "fmt2")
+	assert.Equal(t, "fmt2: fmt p1", err.Error())
+	assert.Equal(t, []interface{}{"p1", "d1"}, err.Debug())
 	assert.True(t, len(err.Stack()) > 0)
-	xerr = xerror.WrapWith(xerror.New("e1").WithDebug("d2", "d1"), "e2")
-	assert.Equal(t, "e2: e1", xerr.Error())
-	assert.Equal(t, []string{"e2", "e1"}, xerr.Messages())
-	assert.Equal(t, []interface{}{"d2", "d1"}, xerr.Debug())
+}
+
+func TestWrap_ErrorPlaceholdersAndNoDebug(t *testing.T) {
+	err := xerror.Wrap(xerror.New("fmt %v", "p1", "d1"), "fmt2 %% %v %v", "p3", "p2")
+	assert.Equal(t, "fmt2 % p3 p2: fmt p1", err.Error())
+	assert.Equal(t, []interface{}{"p3", "p2", "p1", "d1"}, err.Debug())
 	assert.True(t, len(err.Stack()) > 0)
-	xerr = xerror.WrapWith(xerror.New("e1"), "e2")
-	assert.Equal(t, "e2: e1", xerr.Error())
-	assert.Equal(t, []string{"e2", "e1"}, xerr.Messages())
-	assert.Equal(t, []interface{}{}, xerr.Debug())
+}
+
+func TestWrap_ErrorNoPlaceholdersAndDebug(t *testing.T) {
+	err := xerror.Wrap(xerror.New("fmt %v", "p1", "d1"), "fmt2", "d3", "d2")
+	assert.Equal(t, "fmt2: fmt p1", err.Error())
+	assert.Equal(t, []interface{}{"d3", "d2", "p1", "d1"}, err.Debug())
+	assert.True(t, len(err.Stack()) > 0)
+}
+
+func TestWrap_ErrorPlaceholdersAndDebug(t *testing.T) {
+	err := xerror.Wrap(xerror.New("fmt %v", "p1", "d1"), "fmt2 %% %v %v", "p3", "p2", "d3", "d2")
+	assert.Equal(t, "fmt2 % p3 p2: fmt p1", err.Error())
+	assert.Equal(t, []interface{}{"p3", "p2", "d3", "d2", "p1", "d1"}, err.Debug())
 	assert.True(t, len(err.Stack()) > 0)
 }
 
 func TestIs(t *testing.T) {
-	err := xerror.New("m2", "m1")
-	assert.True(t, err.Is("m2"))
-	assert.False(t, err.Is("m1"))
-	assert.True(t, xerror.Is(err, "m2"))
-	assert.False(t, xerror.Is(err, "m1"))
-	assert.True(t, xerror.Is(errors.New("m2"), "m2"))
-	assert.False(t, xerror.Is(errors.New("m2"), "m1"))
+	err := xerror.Wrap(xerror.New("fmt %v", "p1"), "fmt2 %v", "p2")
+	assert.Equal(t, "fmt2 p2: fmt p1", err.Error())
+	assert.True(t, err.Is("fmt2 %v"))
+	assert.False(t, err.Is("fmt2 p2"))
+	assert.False(t, err.Is("fmt %v"))
+	assert.False(t, err.Is("fmt p1"))
 }
 
 func TestIsPattern(t *testing.T) {
-	p1 := regexp.MustCompile("^m")
-	p2 := regexp.MustCompile("^m2")
-	p3 := regexp.MustCompile("^m1")
-
-	err := xerror.New("m2", "m1")
-	assert.True(t, err.IsPattern(p1))
-	assert.True(t, err.IsPattern(p2))
-	assert.False(t, err.IsPattern(p3))
-	assert.True(t, xerror.IsPattern(err, p1))
-	assert.True(t, xerror.IsPattern(err, p2))
-	assert.False(t, err.IsPattern(p3))
-	assert.True(t, xerror.IsPattern(errors.New("m2"), p1))
-	assert.True(t, xerror.IsPattern(errors.New("m2"), p2))
-	assert.False(t, xerror.IsPattern(errors.New("m2"), p3))
+	err := xerror.Wrap(xerror.New("fmt %v x", "p1"), "fmt2 %v y", "p2")
+	assert.Equal(t, "fmt2 p2 y: fmt p1 x", err.Error())
+	assert.True(t, err.IsPattern(regexp.MustCompile("%v y$")))
+	assert.False(t, err.IsPattern(regexp.MustCompile("p2 y$")))
+	assert.False(t, err.IsPattern(regexp.MustCompile("%v x$")))
+	assert.False(t, err.IsPattern(regexp.MustCompile("p1 x$")))
 }
 
 func TestContains(t *testing.T) {
-	err := xerror.New("m2", "m1")
-	assert.True(t, err.Contains("m2"))
-	assert.True(t, err.Contains("m1"))
-	assert.False(t, err.Contains("m3"))
-	assert.True(t, xerror.Contains(err, "m2"))
-	assert.True(t, xerror.Contains(err, "m1"))
-	assert.False(t, xerror.Contains(err, "m3"))
-	assert.True(t, xerror.Contains(errors.New("m2"), "m2"))
-	assert.False(t, xerror.Contains(errors.New("m2"), "m1"))
+	err := xerror.Wrap(xerror.New("fmt %v", "p1"), "fmt2 %v", "p2")
+	assert.Equal(t, "fmt2 p2: fmt p1", err.Error())
+	assert.True(t, err.Contains("fmt2 %v"))
+	assert.False(t, err.Contains("fmt2 p2"))
+	assert.True(t, err.Contains("fmt %v"))
+	assert.False(t, err.Contains("fmt p1"))
 }
 
 func TestContainsPattern(t *testing.T) {
-	p1 := regexp.MustCompile("^m")
-	p2 := regexp.MustCompile("^m2")
-	p3 := regexp.MustCompile("^m1")
-	p4 := regexp.MustCompile("^m3")
-
-	err := xerror.New("m2", "m1")
-	assert.True(t, err.ContainsPattern(p1))
-	assert.True(t, err.ContainsPattern(p2))
-	assert.True(t, err.ContainsPattern(p3))
-	assert.False(t, err.ContainsPattern(p4))
-	assert.True(t, xerror.ContainsPattern(err, p1))
-	assert.True(t, xerror.ContainsPattern(err, p2))
-	assert.True(t, xerror.ContainsPattern(err, p3))
-	assert.False(t, xerror.ContainsPattern(err, p4))
-	assert.True(t, xerror.ContainsPattern(errors.New("m2"), p1))
-	assert.False(t, xerror.ContainsPattern(errors.New("m2"), p3))
+	err := xerror.Wrap(xerror.New("fmt %v x", "p1"), "fmt2 %v y", "p2")
+	assert.Equal(t, "fmt2 p2 y: fmt p1 x", err.Error())
+	assert.True(t, err.ContainsPattern(regexp.MustCompile("%v y$")))
+	assert.False(t, err.ContainsPattern(regexp.MustCompile("p2 y$")))
+	assert.True(t, err.ContainsPattern(regexp.MustCompile("%v x$")))
+	assert.False(t, err.ContainsPattern(regexp.MustCompile("p1 x$")))
 }
 
-func TestCopy(t *testing.T) {
-	err := xerror.New("m1", "m2")
-	cp := err.Copy()
-	assert.Equal(t, cp.Error(), err.Error())
-	assert.Equal(t, cp.Messages(), err.Messages())
-	assert.Equal(t, cp.Debug(), err.Debug())
-	assert.Equal(t, cp.Stack(), err.Stack())
+func TestClone_FormatOnly(t *testing.T) {
+	err := xerror.New("fmt")
+	cp := err.Clone()
+	assert.Equal(t, err, cp)
+	assert.True(t, err != cp)
 }
 
-func TestWithMessages(t *testing.T) {
-	err := xerror.New("m1")
-	w := err.WithMessages("m3", "m2")
-	assert.Equal(t, "m3: m2: m1", w.Error())
-	assert.Equal(t, []string{"m3", "m2", "m1"}, w.Messages())
-	assert.Equal(t, err.Debug(), w.Debug())
-	assert.Equal(t, err.Stack(), w.Stack())
-}
-
-func TestWithDebug(t *testing.T) {
-	err := xerror.New("m1")
-	w := err.WithDebug("d2", "d1")
-	assert.Equal(t, err.Error(), w.Error())
-	assert.Equal(t, err.Messages(), w.Messages())
-	assert.Equal(t, []interface{}{"d2", "d1"}, w.Debug())
-	assert.Equal(t, err.Stack(), w.Stack())
+func TestClone_PlaceholdersAndDebug(t *testing.T) {
+	err := xerror.New("fmt %v %v", "p2", "p1", "d2", "d1")
+	cp := err.Clone()
+	assert.Equal(t, err, cp)
+	assert.True(t, err != cp)
 }
 
 func TestImplementsError(t *testing.T) {
 	var err error
-	err = xerror.New("m1")
-	assert.Equal(t, "m1", err.Error())
+	err = xerror.New("fmt")
+	assert.Equal(t, "fmt", err.Error())
 	_, ok := err.(xerror.Error)
 	assert.True(t, ok)
-	err = xerror.Wrap(nil)
-	assert.True(t, err == nil)
 }
 
 func TestMarshalJSON(t *testing.T) {
-	xerr := xerror.New("m2", "m1").WithDebug("d2", "d1")
+	xerr := xerror.New("fmt %v", "p1", "d2", "d1")
 	_, err := json.Marshal(xerr)
 	assert.Nil(t, err)
 }
