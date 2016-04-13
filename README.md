@@ -1,4 +1,8 @@
-# XERROR
+# XERROR (v2 - stable branch)
+
+[![Build Status](https://api.travis-ci.org/ibrt/go-xerror.svg?branch=v2)](https://travis-ci.org/ibrt/go-xerror?branch=v2)
+[![Coverage Status](https://coveralls.io/repos/github/ibrt/go-xerror/badge.svg?branch=v2)](https://coveralls.io/github/ibrt/go-xerror?branch=v2)
+[![GoDoc](https://godoc.org/gopkg.in/ibrt/go-xerror.v2/xerror?status.svg)](https://godoc.org/gopkg.in/ibrt/go-xerror.v2/xerror)
 
 Package `xerror` extends the functionality of Go's built-in `error` interface: it allows to generate nicely formatted error messages while making it easy to programmatically check for error types, and allowing to propagate additional information such as stack traces and debug values.
 
@@ -16,9 +20,7 @@ It is currently recommended to use the stable v1 branch, which is in maintenance
 
 ## Stable Branch (v1)
 
-[![Build Status](https://api.travis-ci.org/ibrt/go-xerror.svg?branch=v1)](https://travis-ci.org/ibrt/go-xerror?branch=v1)
-[![Coverage Status](https://coveralls.io/repos/github/ibrt/go-xerror/badge.svg?branch=v1)](https://coveralls.io/github/ibrt/go-xerror?branch=v1)
-[![GoDoc](https://godoc.org/gopkg.in/ibrt/go-xerror.v1/xerror?status.svg)](https://godoc.org/gopkg.in/ibrt/go-xerror.v1/xerror)
+
 
 - https://github.com/ibrt/go-xerror/tree/v1
 - `go get gopkg.in/ibrt/go-xerror.v1/xerror`
