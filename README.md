@@ -28,8 +28,6 @@ We will now learn how to create errors, propagate them, check for error types, a
 
 ##### Creating a new error
 
-- https://godoc.org/gopkg.in/ibrt/go-xerror.v2/xerror#New
-
 ```go
 // Defining each error type as a constant string is a good practice.
 const ErrorInvalidValueForField = "invalid value for field %v"
@@ -38,10 +36,20 @@ const ErrorInvalidValueForField = "invalid value for field %v"
 // Since it's public and possibly part of a library, we return error.
 func ValidateRequest(r *Request) error {
   if r.UserID == "" {
-      // "userId" replaces the %v placeholder in the error string
+      // "userId" replaces the %v placeholder in the error type string
       // extra arguments such as `request` are instead only attached to the debug objects slice
       return xerror.New(ErrorInvalidValueForField, "userId", request)
   }
   return nil
 }
 ```
+
+Calling the Error interface methods on the newly created error would return the following:
+
+```
+err.Error() -> "invalid value for field userId"
+err.Debug() -> []interface{}{"userId", request}
+err.Stack() -> a slice of strings representing the stack at call time
+```
+
+Please note that all arguments besides the format string are appended to the debug objects slice. The library counts how many placeholders are present in the format string and limits the numbers of arguments passed to `fmt.Sprintf` when generating the formatted version.
