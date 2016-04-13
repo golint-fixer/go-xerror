@@ -22,15 +22,13 @@ This package is particularly useful in applications such as API servers, where e
 - compatible with Go's `error` interface
 - easy to check for error types while generating nicely formatted messages, which include specifics
 
-##### Rationale
-
-
-
 ### How To
 
 We will now learn how to create errors, propagate them, check for error types, access stack traces and debug objects, and interoperate with the standard Go library. This how-to attempts to describe and clarify the best practices for error handling in Go.
 
 ##### Creating a new error
+
+- https://godoc.org/gopkg.in/ibrt/go-xerror.v2/xerror#New
 
 ```go
 // Defining each error type as a constant string is a good practice.
