@@ -14,6 +14,7 @@ Package xerror extends the functionality of Go's built-in error interface, in se
 [![GoDoc](https://godoc.org/gopkg.in/ibrt/go-xerror.v1/xerror?status.svg)](https://godoc.org/gopkg.in/ibrt/go-xerror.v1/xerror)
 
 Source code: https://github.com/ibrt/go-xerror/tree/v1
+
 Installation: ```go get gopkg.in/ibrt/go-xerror.v1/xerror```
 
 #### Development version:
@@ -23,4 +24,5 @@ Installation: ```go get gopkg.in/ibrt/go-xerror.v1/xerror```
 [![GoDoc](https://godoc.org/github.com/ibrt/go-xerror/xerror?status.svg)](https://godoc.org/github.com/ibrt/go-xerror/xerror)
 
 Source code: https://github.com/ibrt/go-xerror
+
 Installation: ```go get github.com/ibrt/go-xerror/xerror```
