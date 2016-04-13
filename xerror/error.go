@@ -162,15 +162,21 @@ func (e *xerror) Clone() Error {
 }
 
 // Is returns true if the outermost message format (if `err` is `Error`) or error string (if `err` is a Go `error`) equals the given message.
-func Is(err error, message string) bool {
-	if xerr, ok := err.(*xerror); ok {
-		return xerr.Is(message)
+func Is(err error, format string) bool {
+	if err == nil {
+		return false
 	}
-	return err.Error() == message
+	if xerr, ok := err.(*xerror); ok {
+		return xerr.Is(format)
+	}
+	return err.Error() == format
 }
 
 // IsPattern is like Is but uses regexp matching rather than string comparison.
 func IsPattern(err error, pattern *regexp.Regexp) bool {
+	if err == nil {
+		return false
+	}
 	if xerr, ok := err.(*xerror); ok {
 		return xerr.IsPattern(pattern)
 	}
@@ -178,15 +184,21 @@ func IsPattern(err error, pattern *regexp.Regexp) bool {
 }
 
 // Contains is like Is, but in case `err` is of type `Error` compares the message format with all attached message formats.
-func Contains(err error, message string) bool {
-	if xerr, ok := err.(*xerror); ok {
-		return xerr.Contains(message)
+func Contains(err error, format string) bool {
+	if err == nil {
+		return false
 	}
-	return err.Error() == message
+	if xerr, ok := err.(*xerror); ok {
+		return xerr.Contains(format)
+	}
+	return err.Error() == format
 }
 
 // ContainsPattern is like Contains but uses regexp matching rather than string comparison.
 func ContainsPattern(err error, pattern *regexp.Regexp) bool {
+	if err == nil {
+		return false
+	}
 	if xerr, ok := err.(*xerror); ok {
 		return xerr.ContainsPattern(pattern)
 	}

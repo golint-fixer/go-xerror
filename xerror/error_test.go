@@ -111,7 +111,7 @@ func TestWrap_ErrorPlaceholdersAndDebug(t *testing.T) {
 	assert.True(t, len(err.Stack()) > 0)
 }
 
-func TestIs(t *testing.T) {
+func TestIs_Method(t *testing.T) {
 	err := xerror.Wrap(xerror.New("fmt %v", "p1"), "fmt2 %v", "p2")
 	assert.Equal(t, "fmt2 p2: fmt p1", err.Error())
 	assert.True(t, err.Is("fmt2 %v"))
@@ -120,7 +120,26 @@ func TestIs(t *testing.T) {
 	assert.False(t, err.Is("fmt p1"))
 }
 
-func TestIsPattern(t *testing.T) {
+func TestIs_TopLevelNilErr(t *testing.T) {
+	assert.False(t, xerror.Is(nil, "msg"))
+}
+
+func TestIs_TopLevelNativeErr(t *testing.T) {
+	err := errors.New("msg")
+	assert.True(t, xerror.Is(err, "msg"))
+	assert.False(t, xerror.Is(err, "else"))
+}
+
+func TestIsTopLevelError(t *testing.T) {
+	err := xerror.Wrap(xerror.New("fmt %v", "p1"), "fmt2 %v", "p2")
+	assert.Equal(t, "fmt2 p2: fmt p1", err.Error())
+	assert.True(t, xerror.Is(err, "fmt2 %v"))
+	assert.False(t, xerror.Is(err, "fmt2 p2"))
+	assert.False(t, xerror.Is(err, "fmt %v"))
+	assert.False(t, xerror.Is(err, "fmt p1"))
+}
+
+func TestIsPattern_Method(t *testing.T) {
 	err := xerror.Wrap(xerror.New("fmt %v x", "p1"), "fmt2 %v y", "p2")
 	assert.Equal(t, "fmt2 p2 y: fmt p1 x", err.Error())
 	assert.True(t, err.IsPattern(regexp.MustCompile("%v y$")))
@@ -129,7 +148,26 @@ func TestIsPattern(t *testing.T) {
 	assert.False(t, err.IsPattern(regexp.MustCompile("p1 x$")))
 }
 
-func TestContains(t *testing.T) {
+func TestIsPattern_TopLevelNilErr(t *testing.T) {
+	assert.False(t, xerror.IsPattern(nil, regexp.MustCompile("r")))
+}
+
+func TestIsPattern_TopLevelNativeErr(t *testing.T) {
+	err := errors.New("msg")
+	assert.True(t, xerror.IsPattern(err, regexp.MustCompile("^m")))
+	assert.False(t, xerror.IsPattern(err, regexp.MustCompile("^e")))
+}
+
+func TestIsPattern_TopLevelError(t *testing.T) {
+	err := xerror.Wrap(xerror.New("fmt %v x", "p1"), "fmt2 %v y", "p2")
+	assert.Equal(t, "fmt2 p2 y: fmt p1 x", err.Error())
+	assert.True(t, xerror.IsPattern(err, regexp.MustCompile("%v y$")))
+	assert.False(t, xerror.IsPattern(err, regexp.MustCompile("p2 y$")))
+	assert.False(t, xerror.IsPattern(err, regexp.MustCompile("%v x$")))
+	assert.False(t, xerror.IsPattern(err, regexp.MustCompile("p1 x$")))
+}
+
+func TestContains_Method(t *testing.T) {
 	err := xerror.Wrap(xerror.New("fmt %v", "p1"), "fmt2 %v", "p2")
 	assert.Equal(t, "fmt2 p2: fmt p1", err.Error())
 	assert.True(t, err.Contains("fmt2 %v"))
@@ -138,13 +176,51 @@ func TestContains(t *testing.T) {
 	assert.False(t, err.Contains("fmt p1"))
 }
 
-func TestContainsPattern(t *testing.T) {
+func TestContains_TopLevelNilErr(t *testing.T) {
+	assert.False(t, xerror.Contains(nil, "msg"))
+}
+
+func TestContains_TopLevelNativeErr(t *testing.T) {
+	err := errors.New("msg")
+	assert.True(t, xerror.Contains(err, "msg"))
+	assert.False(t, xerror.Contains(err, "else"))
+}
+
+func TestContains_TopLevelError(t *testing.T) {
+	err := xerror.Wrap(xerror.New("fmt %v", "p1"), "fmt2 %v", "p2")
+	assert.Equal(t, "fmt2 p2: fmt p1", err.Error())
+	assert.True(t, xerror.Contains(err, "fmt2 %v"))
+	assert.False(t, xerror.Contains(err, "fmt2 p2"))
+	assert.True(t, xerror.Contains(err, "fmt %v"))
+	assert.False(t, xerror.Contains(err, "fmt p1"))
+}
+
+func TestContainsPattern_Method(t *testing.T) {
 	err := xerror.Wrap(xerror.New("fmt %v x", "p1"), "fmt2 %v y", "p2")
 	assert.Equal(t, "fmt2 p2 y: fmt p1 x", err.Error())
 	assert.True(t, err.ContainsPattern(regexp.MustCompile("%v y$")))
 	assert.False(t, err.ContainsPattern(regexp.MustCompile("p2 y$")))
 	assert.True(t, err.ContainsPattern(regexp.MustCompile("%v x$")))
 	assert.False(t, err.ContainsPattern(regexp.MustCompile("p1 x$")))
+}
+
+func TestContainsPattern_TopLevelNilErr(t *testing.T) {
+	assert.False(t, xerror.ContainsPattern(nil, regexp.MustCompile("r")))
+}
+
+func TestContainsPattern_TopLevelNativeErr(t *testing.T) {
+	err := errors.New("msg")
+	assert.True(t, xerror.ContainsPattern(err, regexp.MustCompile("^m")))
+	assert.False(t, xerror.ContainsPattern(err, regexp.MustCompile("^e")))
+}
+
+func TestContainsPattern_TopLevelError(t *testing.T) {
+	err := xerror.Wrap(xerror.New("fmt %v x", "p1"), "fmt2 %v y", "p2")
+	assert.Equal(t, "fmt2 p2 y: fmt p1 x", err.Error())
+	assert.True(t, xerror.ContainsPattern(err, regexp.MustCompile("%v y$")))
+	assert.False(t, xerror.ContainsPattern(err, regexp.MustCompile("p2 y$")))
+	assert.True(t, xerror.ContainsPattern(err, regexp.MustCompile("%v x$")))
+	assert.False(t, xerror.ContainsPattern(err, regexp.MustCompile("p1 x$")))
 }
 
 func TestClone_FormatOnly(t *testing.T) {
