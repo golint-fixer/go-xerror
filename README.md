@@ -7,7 +7,7 @@ Package xerror extends the functionality of Go's built-in error interface, in se
 - errors hold a list of messages, and can be wrapped by prepending new messages to the list
 - errors can natively be treated as Go built-in errors and serialized to a string message or JSON representation
 
-Latest stable version (v1):
+#### Stable version (v1):
 
 [![Build Status](https://api.travis-ci.org/ibrt/go-xerror.svg?branch=v1)](https://travis-ci.org/ibrt/go-xerror?branch=v1)
 [![Coverage Status](https://coveralls.io/repos/github/ibrt/go-xerror/badge.svg?branch=v1)](https://coveralls.io/github/ibrt/go-xerror?branch=v1)
@@ -15,7 +15,7 @@ Latest stable version (v1):
 
 ```go get gopkg.in/ibrt/go-xerror.v1/xerror```
 
-Development version (might break at any time):
+#### Development version (might break at any time):
 
 [![Build Status](https://api.travis-ci.org/ibrt/go-xerror.svg?branch=master)](https://travis-ci.org/ibrt/go-xerror?branch=master)
 [![Coverage Status](https://coveralls.io/repos/github/ibrt/go-xerror/badge.svg?branch=master)](https://coveralls.io/github/ibrt/go-xerror?branch=master)
