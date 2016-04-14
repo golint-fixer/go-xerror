@@ -189,12 +189,12 @@ func TestImplementsError(t *testing.T) {
 	assert.True(t, ok)
 }
 
-func TestMarshalJSON(t *testing.T) {
+func TestImplementsJSONMarshaler(t *testing.T) {
 	_, err := json.Marshal(xerror.New("fmt %v", "p1", "d2", "d1"))
 	assert.Nil(t, err)
 }
 
-func TestFormat(t *testing.T) {
+func TestImplementsFMTStringer(t *testing.T) {
 	err := xerror.New("fmt %v", "p1", "d1")
 	assert.Equal(t, "fmt p1", fmt.Sprintf("%v", err))
 	buf, err2 := err.MarshalJSON()
