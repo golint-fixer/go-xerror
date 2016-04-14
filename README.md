@@ -111,7 +111,7 @@ err.Contains(ErrorBadRequest) // -> true
 err.Contains(ErrorMalformedRequestBody) // -> true
 ```
 
-In other words, `Is` only compares the format string with the outermost error in the wrap chain, while `Contains` performs the comparisone on all wrapped errors. The top-level functions work similarly, but they accept any kind of `error` argument. If the given `error` is actually a `xerror.Error`, they are equivalent to calling the corresponding methods on the interface, otherwise they perform the comparison on the string version of the given error.
+In other words, `Is` only compares the format string with the outermost error in the wrap chain, while `Contains` performs the comparison on all wrapped errors. The top-level functions work similarly, but they accept any kind of `error` argument. If the given `error` is actually a `xerror.Error`, they are equivalent to calling the corresponding methods on the interface, otherwise they perform the comparison on the string version of the given error.
 
 ```go
 xerror.Is(secondError, ErrorBadRequest) // -> true
