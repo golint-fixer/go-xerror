@@ -15,6 +15,7 @@ import (
 type Error interface {
 	error
 	json.Marshaler
+	fmt.GoStringer
 
 	Is(string) bool
 	Contains(string) bool
@@ -71,6 +72,15 @@ func (e *xerr) MarshalJSON() ([]byte, error) {
 		Debug:   e.dbg,
 		Stack:   e.stack,
 	})
+}
+
+// GoString implements the `fmt.GoStringer` interface.
+func (e *xerr) GoString() string {
+	buf, err := e.MarshalJSON()
+	if err != nil {
+		return fmt.Sprintf("!ERROR(%v)", err)
+	}
+	return string(buf)
 }
 
 // Is returns true if the outermost error message format equals the given message format, false otherwise.

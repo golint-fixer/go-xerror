@@ -3,6 +3,7 @@ package xerror_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/ibrt/go-xerror/xerror"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -191,4 +192,12 @@ func TestImplementsError(t *testing.T) {
 func TestMarshalJSON(t *testing.T) {
 	_, err := json.Marshal(xerror.New("fmt %v", "p1", "d2", "d1"))
 	assert.Nil(t, err)
+}
+
+func TestFormat(t *testing.T) {
+	err := xerror.New("fmt %v", "p1", "d1")
+	assert.Equal(t, "fmt p1", fmt.Sprintf("%v", err))
+	buf, err2 := err.MarshalJSON()
+	assert.Nil(t, err2)
+	assert.Equal(t, string(buf), fmt.Sprintf("%#v", err))
 }
