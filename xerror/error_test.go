@@ -196,8 +196,8 @@ func TestImplementsJSONMarshaler(t *testing.T) {
 
 func TestImplementsFMTStringer(t *testing.T) {
 	err := xerror.New("fmt %v", "p1", "d1")
-	assert.Equal(t, "fmt p1", fmt.Sprintf("%v", err))
+	assert.Equal(t, "fmt p1", fmt.Sprintf("%v", error(err)))
 	buf, err2 := err.MarshalJSON()
 	assert.Nil(t, err2)
-	assert.Equal(t, string(buf), fmt.Sprintf("%#v", err))
+	assert.Equal(t, string(buf), fmt.Sprintf("%#v", error(err)))
 }
