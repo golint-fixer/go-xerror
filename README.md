@@ -28,6 +28,8 @@ We will now learn how to create errors, propagate them, check for error types, a
 
 ##### Creating a new error
 
+To create a new error, use the `xerror.New` function:
+
 ```go
 // Defining each error type as a constant string is a good practice.
 const ErrorInvalidValueForField = "invalid value for field %v"
@@ -49,7 +51,57 @@ Calling the Error interface methods on the newly created error would return the 
 ```
 err.Error() -> "invalid value for field userId"
 err.Debug() -> []interface{}{"userId", request}
-err.Stack() -> a slice of strings representing the stack at call time
+err.Stack() -> a slice of strings representing the stack at New call
 ```
 
 Please note that all arguments besides the format string are appended to the debug objects slice. The library counts how many placeholders are present in the format string and limits the numbers of arguments passed to `fmt.Sprintf` when generating the formatted version.
+
+##### Propagating errors
+
+Errors are usually propagated up the call stack as return values. It is often desirable to wrap them with information at the right level of abstraction, but the standard Go library doesn't provide a good way to do so. The `xerror.Wrap` function can be used for this purpose, as illustrated below:
+
+```go
+const (
+  ErrorMalformedRequestBody = "malformed request body"
+  ErrorBadRequest = "bad request for URL %v"
+)
+
+func ParseRequest(buf []byte) (*Request, error) {
+  req := &Request{}
+  if err := json.Unmarshal(buf, req); err != nil {
+    return nil, xerror.Wrap(err, ErrorMalformedRequestBody, buf)
+  }
+  return req, nil
+}
+
+func HandleRequest(r *http.Request) (*Response, error) {
+  buf, err := ioutil.ReadAll(r.body)
+  defer r.Body.Close()
+  if err != nil {
+    return nil, xerror.Wrap(err, ErrorBadRequest, r.URL, r) // first error
+  }
+  req, err := ParseRequest(buf)
+  if err != nil {
+    return nil, xerror.Wrap(err, ErrorBadRequest, r.URL, r) // second error
+  }
+  
+  ...
+}
+```
+
+Calling the Error interface methods on the first error would return the following:
+
+```
+err.Error() -> "bad request for URL <contents of r.URL>: unexpected end of file"
+err.Debug() -> []interface{}{r.URL, r}
+err.Stack() -> a slice of strings representing the stack at Wrap call
+```
+
+Calling the Error interface methods on the second error would return the following:
+
+```
+err.Error() -> "bad request for URL <contents of r.URL>: malformed request body: invalid character 'b'"
+err.Debug() -> []interface{}{r.URL, r, buf
+err.Stack() -> a slice of strings representing the stack at the first Wrap call
+}
+```
