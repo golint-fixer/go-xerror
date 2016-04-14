@@ -34,7 +34,7 @@ To create a new error, use the `xerror.New` function:
 const ErrorInvalidValueForField = "invalid value for field %v"
 
 func ValidateRequest(r *Request) error {
-  if r.UserID == "" {
+  if r.UserID <= 0 {
       return xerror.New(ErrorInvalidValueForField, "userId", request)
   }
   return nil
