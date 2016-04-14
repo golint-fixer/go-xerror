@@ -48,10 +48,10 @@ func ValidateRequest(r *Request) error {
 
 Calling the Error interface methods on the newly created error would return the following:
 
-```
-err.Error() -> "invalid value for field userId"
-err.Debug() -> []interface{}{"userId", request}
-err.Stack() -> a slice of strings representing the stack at New call
+```go
+err.Error() // -> "invalid value for field userId"
+err.Debug() // -> []interface{}{"userId", request}
+err.Stack() // -> a slice of strings representing the stack at New call
 ```
 
 Please note that all arguments besides the format string are appended to the debug objects slice. The library counts how many placeholders are present in the format string and limits the numbers of arguments passed to `fmt.Sprintf` when generating the formatted version.
@@ -91,18 +91,18 @@ func HandleRequest(r *http.Request) (*Response, error) {
 
 Calling the Error interface methods on the first error would return the following:
 
-```
-err.Error() -> "bad request for URL <contents of r.URL>: unexpected end of file"
-err.Debug() -> []interface{}{r.URL, r}
-err.Stack() -> a slice of strings representing the stack at Wrap call
+```go
+err.Error() // -> "bad request for URL <contents of r.URL>: unexpected end of file"
+err.Debug() // -> []interface{}{r.URL, r}
+err.Stack() // -> a slice of strings representing the stack at Wrap call
 ```
 
 Calling the Error interface methods on the second error would return the following:
 
-```
-err.Error() -> "bad request for URL <contents of r.URL>: malformed request body: invalid character 'b'"
-err.Debug() -> []interface{}{r.URL, r, buf
-err.Stack() -> a slice of strings representing the stack at the first Wrap call
+```go
+err.Error() // -> "bad request for URL <contents of r.URL>: malformed request body: invalid character 'b'"
+err.Debug() // -> []interface{}{r.URL, r, buf
+err.Stack() // -> a slice of strings representing the stack at the first Wrap call
 ```
 
 ##### Determining the type of an error
@@ -111,18 +111,18 @@ This library provides functions for determining error types: `Is` and `Contains`
 
 Let's consider the second error from the _Propagating errors_ section. Here is the result of some sample calls:
 
-```
-err.Is(ErrorBadRequest) -> true
-err.Is(ErrorMalformedRequestBody) -> false
-err.Contains(ErrorBadRequest) -> true
-err.Contains(ErrorMalformedRequestBody) -> true
+```go
+err.Is(ErrorBadRequest) // -> true
+err.Is(ErrorMalformedRequestBody) // -> false
+err.Contains(ErrorBadRequest) // -> true
+err.Contains(ErrorMalformedRequestBody) // -> true
 ```
 
 In other words, `Is` only compares the format string with the outermost error in the wrap chain, while `Contains` performs the match on errors at any level. The top level functions work similarly, but they accept any kind of `error` argument. If the given `error` is actually a `xerror.Error`, they are equivalent to calling the corresponding methods on the interface, otherwise they perform the comparison on the string version of the given error.
 
-```
-xerror.Is(secondError, ErrorBadRequest) -> true
-xerror.Is(secondError, ErrorMalformedRequestBody) -> false
-xerror.Is(errors.New(ErrorBadRequest), ErrorBadRequest) -> true
-xerror.Contains(errors.New(ErrorBadRequest), ErrorBadRequest -> true
+```go
+xerror.Is(secondError, ErrorBadRequest) // -> true
+xerror.Is(secondError, ErrorMalformedRequestBody) // -> false
+xerror.Is(errors.New(ErrorBadRequest), ErrorBadRequest) // -> true
+xerror.Contains(errors.New(ErrorBadRequest), ErrorBadRequest // -> true
 ```
