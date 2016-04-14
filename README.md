@@ -19,42 +19,35 @@ This package is particularly useful in applications such as API servers, where e
 - a stack trace is attached to errors at creation
 - additional debug values can be attached to errors for deferred out-of-band logging and reporting
 - nice interface for wrapping errors and propagating them at the right level of abstraction
+- easy to check for error types while generating nicely formatted messages
 - compatible with Go's `error` interface
-- easy to check for error types while generating nicely formatted messages, which include specifics
 
 ### How To
 
-We will now learn how to create errors, propagate them, check for error types, access stack traces and debug objects, and interoperate with the standard Go library. This how-to attempts to describe and clarify the best practices for error handling in Go.
+We will now learn how to create errors, propagate them, check for error types, access stack traces and debug objects, and interoperate with the standard Go library. This how-to also attempts to describe and clarify some best practices for error handling in Go.
 
 ##### Creating a new error
 
 To create a new error, use the `xerror.New` function:
 
 ```go
-// Defining each error type as a constant string is a good practice.
 const ErrorInvalidValueForField = "invalid value for field %v"
 
-// The return type of this function could alternatively be xerror.Error.
-// Since it's public and possibly part of a library, we return error.
 func ValidateRequest(r *Request) error {
   if r.UserID == "" {
-      // "userId" replaces the %v placeholder in the error type string
-      // extra arguments such as `request` are instead only attached to the debug objects slice
       return xerror.New(ErrorInvalidValueForField, "userId", request)
   }
   return nil
 }
 ```
 
-Calling the Error interface methods on the newly created error would return the following:
+All arguments of `New` besides the format string are appended to the debug objects slice. The library counts how many placeholders are present in the format string and limits the numbers of arguments passed to `fmt.Sprintf` when generating the formatted version. Calling the Error interface methods on the newly created error would return the following:
 
 ```go
 err.Error() // -> "invalid value for field userId"
 err.Debug() // -> []interface{}{"userId", request}
-err.Stack() // -> a slice of strings representing the stack at New call
+err.Stack() // -> a slice of strings representing the stack when New is called
 ```
-
-Please note that all arguments besides the format string are appended to the debug objects slice. The library counts how many placeholders are present in the format string and limits the numbers of arguments passed to `fmt.Sprintf` when generating the formatted version.
 
 ##### Propagating errors
 
@@ -92,7 +85,7 @@ func HandleRequest(r *http.Request) (*Response, error) {
 Calling the Error interface methods on the first error would return the following:
 
 ```go
-err.Error() // -> "bad request for URL <contents of r.URL>: unexpected end of file"
+err.Error() // -> "bad request for URL http://some-url: unexpected end of file"
 err.Debug() // -> []interface{}{r.URL, r}
 err.Stack() // -> a slice of strings representing the stack at Wrap call
 ```
@@ -100,14 +93,14 @@ err.Stack() // -> a slice of strings representing the stack at Wrap call
 Calling the Error interface methods on the second error would return the following:
 
 ```go
-err.Error() // -> "bad request for URL <contents of r.URL>: malformed request body: invalid character 'b'"
-err.Debug() // -> []interface{}{r.URL, r, buf
+err.Error() // -> "bad request for URL http://some-url: malformed request body: invalid character 'b'"
+err.Debug() // -> []interface{}{r.URL, r, buf}
 err.Stack() // -> a slice of strings representing the stack at the first Wrap call
 ```
 
 ##### Determining the type of an error
 
-This library provides functions for determining error types: `Is` and `Contains`, which exist both as top level package functions and as methods on the `Error` interface. Error type checking in Go is usually done by storing error messages a string constants, and performing string comparisons. Unfortunately this technique doesn't work well when used together with `fmt.Errorf`, as the generated error string is not equal to the original format string. The functions described above instead perform the comparison on the format string, allowing to generate clearer error messages while retaining the ability to check error types.
+This library provides functions for determining error types: `Is` and `Contains`. They exist both as top-level package functions and as methods on the `Error` interface. Error type checking in Go is usually done by storing error messages a string constants, and performing string comparisons. Unfortunately this technique doesn't work well when used together with `fmt.Errorf`, as the generated error string is not equal to the original format string. These functions instead perform the comparison on the format string, allowing to generate clearer error messages while retaining the ability to check for error types.
 
 Let's consider the second error from the _Propagating errors_ section. Here is the result of some sample calls:
 
@@ -118,7 +111,7 @@ err.Contains(ErrorBadRequest) // -> true
 err.Contains(ErrorMalformedRequestBody) // -> true
 ```
 
-In other words, `Is` only compares the format string with the outermost error in the wrap chain, while `Contains` performs the match on errors at any level. The top level functions work similarly, but they accept any kind of `error` argument. If the given `error` is actually a `xerror.Error`, they are equivalent to calling the corresponding methods on the interface, otherwise they perform the comparison on the string version of the given error.
+In other words, `Is` only compares the format string with the outermost error in the wrap chain, while `Contains` performs the comparisone on all wrapped errors. The top-level functions work similarly, but they accept any kind of `error` argument. If the given `error` is actually a `xerror.Error`, they are equivalent to calling the corresponding methods on the interface, otherwise they perform the comparison on the string version of the given error.
 
 ```go
 xerror.Is(secondError, ErrorBadRequest) // -> true
