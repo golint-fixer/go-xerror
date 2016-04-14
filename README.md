@@ -119,3 +119,33 @@ xerror.Is(secondError, ErrorMalformedRequestBody) // -> false
 xerror.Is(errors.New(ErrorBadRequest), ErrorBadRequest) // -> true
 xerror.Contains(errors.New(ErrorBadRequest), ErrorBadRequest // -> true
 ```
+
+##### Reporting and displaying errors
+
+The `xerror.Error` interface extends `error`, `json.Marshaler`, and `fmt.GoStringer`. It is possible to obtain string representations of errors for various use cases:
+
+- calling `err.Error()` or formatting as `%s` or `%v`returns a short string
+- serializing to JSON or formatting as `%#v` returns a long string
+
+This is an example of short string:
+
+```
+bad request: malformed request body: invalid character 'b'
+```
+
+This is an example of long string (actually on a single line):
+
+```
+{
+  "message": "bad request: malformed request body: invalid character 'b'",
+  "debug": [
+    "d2",
+    "d1"
+  ],
+  "stack":[
+    "/path/to/file1.go:49 (0x8448b)",
+    "/path/to/file2.go:198 (0x8448b)",
+    ...
+  ]
+}
+```
