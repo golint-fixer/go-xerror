@@ -117,7 +117,7 @@ In other words, `Is` only compares the format string with the outermost error in
 xerror.Is(secondError, ErrorBadRequest) // -> true
 xerror.Is(secondError, ErrorMalformedRequestBody) // -> false
 xerror.Is(errors.New(ErrorBadRequest), ErrorBadRequest) // -> true
-xerror.Contains(errors.New(ErrorBadRequest), ErrorBadRequest // -> true
+xerror.Contains(errors.New(ErrorBadRequest), ErrorBadRequest) // -> true
 ```
 
 ##### Reporting and displaying errors
