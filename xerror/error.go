@@ -46,7 +46,7 @@ func New(format string, v ...interface{}) Error {
 		msg:   safeSprintf(format, v),
 		fmts:  []string{format},
 		dbg:   v,
-		stack: newStack(),
+		stack: NewStack(),
 	}
 }
 

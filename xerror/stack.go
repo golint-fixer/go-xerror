@@ -9,7 +9,8 @@ const (
 	maxStackLen = 100
 )
 
-func newStack() []string {
+// NewStack generates a formatted stack trace.
+func NewStack() []string {
 	pcs := make([]uintptr, maxStackLen)
 	pcs = pcs[:runtime.Callers(2, pcs)]
 	stack := make([]string, len(pcs))
