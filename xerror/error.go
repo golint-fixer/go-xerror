@@ -8,6 +8,7 @@ package xerror
 import (
 	"encoding/json"
 	"fmt"
+	"runtime/debug"
 	"strings"
 )
 
@@ -46,7 +47,7 @@ func New(format string, v ...interface{}) Error {
 		msg:   safeSprintf(format, v),
 		fmts:  []string{format},
 		dbg:   v,
-		stack: NewStack(),
+		stack: strings.Split(string(debug.Stack()), "\n"),
 	}
 }
 
