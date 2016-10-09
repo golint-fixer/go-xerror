@@ -2,6 +2,7 @@
 
 [![Build Status](https://api.travis-ci.org/ibrt/go-xerror.svg?branch=v2)](https://travis-ci.org/ibrt/go-xerror?branch=v2)
 [![Coverage Status](https://coveralls.io/repos/github/ibrt/go-xerror/badge.svg?branch=v2)](https://coveralls.io/github/ibrt/go-xerror?branch=v2)
+[![Go Report Card](https://goreportcard.com/badge/gopkg.in/ibrt/go-xerror.v2)](https://goreportcard.com/report/gopkg.in/ibrt/go-xerror.v2)
 [![GoDoc](https://godoc.org/gopkg.in/ibrt/go-xerror.v2/xerror?status.svg)](https://godoc.org/gopkg.in/ibrt/go-xerror.v2/xerror)
 
 ```
